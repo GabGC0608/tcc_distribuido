@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_USER: tcc
       POSTGRES_PASSWORD: tcc
-      POSTGRES_DB: postgres
+      POSTGRES_DB: tcc # Banco padrão, os outros serão criados pelo init.sql
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -42,6 +42,8 @@ services:
 
   auth-service:
     build: ./services/auth-service
+    # Executa a migração antes de subir o servidor web da API
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment: &appenv
       SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me}
       DEBUG: ${DEBUG:-1}
@@ -62,6 +64,7 @@ services:
 
   monograph-service:
     build: ./services/monograph-service
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: monograph_db
@@ -77,6 +80,7 @@ services:
 
   defense-service:
     build: ./services/defense-service
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: defense_db
@@ -89,6 +93,7 @@ services:
 
   repository-service:
     build: ./services/repository-service
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: repository_db
@@ -103,6 +108,7 @@ services:
 
   notification-service:
     build: ./services/notification-service
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: notification_db
@@ -113,6 +119,7 @@ services:
 
   report-service:
     build: ./services/report-service
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: report_db
@@ -121,50 +128,47 @@ services:
       rabbitmq: {condition: service_healthy}
     ports: ["8006:8000"]
 
+  # WORKERS: Agora apenas iniciam o processo do worker, pois a API correspondente já migrou o banco
   monograph-worker:
     build: ./services/monograph-service
-    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    command: python manage.py worker
     environment:
       <<: *appenv
       DB_NAME: monograph_db
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
+      monograph-service: {condition: service_started}
     volumes:
       - monograph_media:/app/media
 
   repository-worker:
     build: ./services/repository-service
-    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    command: python manage.py worker
     environment:
       <<: *appenv
       DB_NAME: repository_db
       MONOGRAPH_MEDIA_ROOT: /app/media
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
+      repository-service: {condition: service_started}
     volumes:
       - monograph_media:/app/media:ro
 
   notification-worker:
     build: ./services/notification-service
-    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    command: python manage.py worker
     environment:
       <<: *appenv
       DB_NAME: notification_db
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
+      notification-service: {condition: service_started}
 
   report-worker:
     build: ./services/report-service
-    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    command: python manage.py worker
     environment:
       <<: *appenv
       DB_NAME: report_db
     depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
+      report-service: {condition: service_started}
 
 volumes:
   pgdata:

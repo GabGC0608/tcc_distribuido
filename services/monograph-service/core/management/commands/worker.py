@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from tcc_common.events import consume,publish
-from .models import Monograph,ComplementaryDocument
+from core.models import Monograph, ComplementaryDocument
 from PyPDF2 import PdfReader
 class Command(BaseCommand):
  def handle(self,*args,**kwargs):
