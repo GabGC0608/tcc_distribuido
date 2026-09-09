@@ -4,7 +4,7 @@ import pika
 EXCHANGE=os.getenv("RABBITMQ_EXCHANGE","tcc.events")
 
 def publish(event_type, payload):
-    url=os.getenv("RABBITMQ_URL","amqp://tcc:tcc@rabbitmq:5672/%2F")
+    url=os.getenv("RABBITMQ_URL","amqp://tcc:tcc@localhost:5672/%2F")
     conn=pika.BlockingConnection(pika.URLParameters(url))
     ch=conn.channel(); ch.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
     body=json.dumps({"type":event_type,"payload":payload})
@@ -12,7 +12,7 @@ def publish(event_type, payload):
     conn.close()
 
 def consume(queue, binding_keys, callback):
-    url=os.getenv("RABBITMQ_URL","amqp://tcc:tcc@rabbitmq:5672/%2F")
+    url=os.getenv("RABBITMQ_URL","amqp://tcc:tcc@localhost:5672/%2F")
     conn=pika.BlockingConnection(pika.URLParameters(url)); ch=conn.channel()
     ch.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
     ch.queue_declare(queue=queue,durable=True)

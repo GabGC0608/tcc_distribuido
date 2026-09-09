@@ -33,7 +33,7 @@
 
 Autenticação por login/senha, permissões por papel, auditoria, CRUD REST, upload somente PDF até 50 MB, SHA-256, aprovação obrigatória do orientador antes da banca, eventos assíncronos para extração/indexação/notificação, repositório público sem autenticação, Redis e RabbitMQ.
 
-## Subir tudo
+## Subir tudo (Docker — recomendado só para teste/desenvolvimento rápido)
 
 ```bash
 docker compose up --build
@@ -46,6 +46,30 @@ Serviços:
 - Repositório: http://localhost:8004
 - Notificações: http://localhost:8005
 - Relatórios: http://localhost:8006
+
+## Rodar nativamente (sem Docker)
+
+O projeto não depende de Docker: cada serviço é um projeto Django comum. Requisitos
+locais: Python 3.13, PostgreSQL, Redis e RabbitMQ instalados/rodando na máquina (ou
+apontando via variáveis de ambiente para instâncias já existentes).
+
+Para cada serviço em `services/<nome>-service`:
+
+```bash
+cd services/auth-service   # repita para cada serviço
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp ../../.env.example .env   # ajuste DB_NAME, DB_USER, DB_PASSWORD etc.
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8001   # porta de cada serviço, ver tabela acima
+```
+
+Os defaults de `DB_HOST` e `RABBITMQ_URL` já apontam para `localhost`; ao rodar via
+`docker compose`, o próprio compose sobrescreve essas variáveis para os hostnames dos
+containers (`postgres`, `rabbitmq`), então os dois modos convivem sem conflito.
+
+Cada serviço precisa de um banco PostgreSQL próprio (ex.: `tcc_auth`, `tcc_monograph`,
+...) — crie-os localmente com o mesmo usuário/senha do `.env`.
 
 ## Migrações
 

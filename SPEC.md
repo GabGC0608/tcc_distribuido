@@ -142,6 +142,18 @@ Interface web em JavaScript, consumindo a API, cobrindo:
 - lançamento de avaliação (membros de banca)
 - pesquisa pública no repositório
 
+**Decisão de implementação:** Django templates + JavaScript estático (sem Node/npm,
+sem etapa de build) — o avaliador segue o enunciado e roda só o que o Django exige.
+Ver ADR na issue [#45](https://github.com/GabGC0608/tcc_distribuido/issues/45)
+(reverte a decisão anterior de Vite/TypeScript, issue #44).
+
+## 10.1 Execução: Docker vs. nativo
+
+Docker (`docker-compose.yml`) é usado apenas para teste/desenvolvimento rápido. O
+projeto **precisa rodar nativamente** com Django puro (virtualenv + Postgres/Redis/
+RabbitMQ locais ou externos apontados por variável de ambiente) — ver seção "Rodar
+nativamente" no `README.md` e a issue [#46](https://github.com/GabGC0608/tcc_distribuido/issues/46).
+
 ## 11. Histórico de alterações
 
 Registrar, para toda alteração relevante: quem fez, o que mudou, data/hora.
