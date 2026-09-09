@@ -14,7 +14,7 @@
 
 
 
-##O sistema permite:
+## O sistema permite:
 
 - Cadastro de alunos, professores e cursos;
 - Cadastro e submissão de monografias;
