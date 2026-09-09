@@ -1,7 +1,5 @@
 # Sistema Distribuído de Monografias (TCC)
 
-Implementação backend baseada no enunciado fornecido. Não inclui frontend.
-
 ## Arquitetura
 
 - `auth-service`: usuários, papéis, login/JWT e auditoria.
@@ -13,6 +11,23 @@ Implementação backend baseada no enunciado fornecido. Não inclui frontend.
 - PostgreSQL: banco separado por serviço.
 - Redis: cache, rate limiting e controle de upload.
 - RabbitMQ: eventos assíncronos.
+
+
+
+##O sistema permite:
+
+- Cadastro de alunos, professores e cursos;
+- Cadastro e submissão de monografias;
+- Upload e validação de arquivos PDF;
+- Aprovação pelo orientador;
+- Agendamento de bancas;
+- Cadastro de membros da banca;
+- Registro de avaliações;
+- Publicação de monografias aprovadas;
+- Pesquisa pública;
+- Notificações;
+- Relatórios e métricas.
+
 
 ## Requisitos do enunciado atendidos
 
