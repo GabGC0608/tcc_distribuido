@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from tcc_common.events import consume
-from .models import Notification
+from core.models import Notification
 class Command(BaseCommand):
  def handle(self,*args,**kwargs):
   def cb(event):

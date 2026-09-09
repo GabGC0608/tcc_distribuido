@@ -42,8 +42,8 @@ services:
 
   auth-service:
     build: ./services/auth-service
-    # Executa a migração antes de subir o servidor web da API
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    # Gera a migração da app core antes de migrar e subir o servidor web da API
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment: &appenv
       SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me}
       DEBUG: ${DEBUG:-1}
@@ -64,7 +64,7 @@ services:
 
   monograph-service:
     build: ./services/monograph-service
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: monograph_db
@@ -80,7 +80,7 @@ services:
 
   defense-service:
     build: ./services/defense-service
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: defense_db
@@ -93,7 +93,7 @@ services:
 
   repository-service:
     build: ./services/repository-service
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: repository_db
@@ -108,7 +108,7 @@ services:
 
   notification-service:
     build: ./services/notification-service
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: notification_db
@@ -119,7 +119,7 @@ services:
 
   report-service:
     build: ./services/report-service
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     environment:
       <<: *appenv
       DB_NAME: report_db

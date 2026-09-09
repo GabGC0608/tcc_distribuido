@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from tcc_common.events import consume
-from .models import RepositoryMonograph
+from core.models import RepositoryMonograph
 from django.utils.dateparse import parse_datetime
 class Command(BaseCommand):
  def handle(self,*args,**kwargs):

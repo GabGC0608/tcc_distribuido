@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from tcc_common.events import consume
-from .models import Metric
+from core.models import Metric
 from django.db.models import Count
 class Command(BaseCommand):
  def handle(self,*args,**kwargs):
