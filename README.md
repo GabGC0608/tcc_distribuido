@@ -66,6 +66,65 @@ curl http://localhost:8006/api/reports/overview
 
 Consulte `docs/API.md` para os endpoints.
 
+# 1. Tecnologias utilizadas
+
+- Python 3.13
+- Django
+- Django REST Framework
+- PostgreSQL
+- Redis
+- RabbitMQ
+- Docker
+- Docker Compose
+- JWT
+- PyPDF2
+
+---
+
+# 2. Arquitetura do sistema
+
+```text
+                         USUÁRIO
+                            │
+                            ▼
+                    ┌────────────────┐
+                    │ Frontend / API │
+                    └───────┬────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+              ▼             ▼             ▼
+       ┌────────────┐ ┌────────────┐ ┌────────────┐
+       │    AUTH    │ │ MONOGRAPH  │ │  DEFENSE   │
+       │   :8001    │ │   :8002    │ │   :8003    │
+       └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
+             │              │              │
+             └──────────────┼──────────────┘
+                            │
+                            ▼
+                    ┌───────────────┐
+                    │   RabbitMQ    │
+                    │  Mensageria   │
+                    └───────┬───────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+              ▼             ▼             ▼
+       ┌────────────┐ ┌────────────┐ ┌────────────┐
+       │ REPOSITORY │ │NOTIFICATION│ │   REPORT   │
+       │   :8004    │ │   :8005    │ │   :8006    │
+       └─────┬──────┘ └────────────┘ └────────────┘
+             │
+             ▼
+       ┌──────────────┐
+       │ PostgreSQL   │
+       └──────────────┘
+
+              ┌──────────────┐
+              │    Redis     │
+              │ Cache / apoio│
+              └──────────────┘
+
 ## Versões
 
 O projeto foi fixado em Django 6.1.1, Django REST Framework 3.18.1 e django-allauth 65.19.2. Em 8/09/2026, Django 6.1 é a linha atual e o allauth 65.19.x declara suporte oficial a Django 6.1.
