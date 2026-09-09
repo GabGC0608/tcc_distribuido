@@ -1,0 +1,173 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: tcc
+      POSTGRES_PASSWORD: tcc
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tcc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: tcc
+      RABBITMQ_DEFAULT_PASS: tcc
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    build: ./services/auth-service
+    environment: &appenv
+      SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me}
+      DEBUG: ${DEBUG:-1}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: tcc
+      DB_PASSWORD: tcc
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://tcc:tcc@rabbitmq:5672/%2F
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-change-me-jwt}
+      ALLOWED_ADMIN_NETWORKS: ${ALLOWED_ADMIN_NETWORKS:-172.16.0.0/12}
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    ports: ["8001:8000"]
+
+  monograph-service:
+    build: ./services/monograph-service
+    environment:
+      <<: *appenv
+      DB_NAME: monograph_db
+      AUTH_SERVICE_URL: http://auth-service:8000
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      auth-service: {condition: service_started}
+    ports: ["8002:8000"]
+    volumes:
+      - monograph_media:/app/media
+
+  defense-service:
+    build: ./services/defense-service
+    environment:
+      <<: *appenv
+      DB_NAME: defense_db
+      MONOGRAPH_SERVICE_URL: http://monograph-service:8000
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      monograph-service: {condition: service_started}
+    ports: ["8003:8000"]
+
+  repository-service:
+    build: ./services/repository-service
+    environment:
+      <<: *appenv
+      DB_NAME: repository_db
+      MONOGRAPH_MEDIA_ROOT: /app/media
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    ports: ["8004:8000"]
+    volumes:
+      - monograph_media:/app/media:ro
+
+  notification-service:
+    build: ./services/notification-service
+    environment:
+      <<: *appenv
+      DB_NAME: notification_db
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    ports: ["8005:8000"]
+
+  report-service:
+    build: ./services/report-service
+    environment:
+      <<: *appenv
+      DB_NAME: report_db
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    ports: ["8006:8000"]
+
+  monograph-worker:
+    build: ./services/monograph-service
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    environment:
+      <<: *appenv
+      DB_NAME: monograph_db
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    volumes:
+      - monograph_media:/app/media
+
+  repository-worker:
+    build: ./services/repository-service
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    environment:
+      <<: *appenv
+      DB_NAME: repository_db
+      MONOGRAPH_MEDIA_ROOT: /app/media
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    volumes:
+      - monograph_media:/app/media:ro
+
+  notification-worker:
+    build: ./services/notification-service
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    environment:
+      <<: *appenv
+      DB_NAME: notification_db
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  report-worker:
+    build: ./services/report-service
+    command: sh -c "python manage.py makemigrations core --noinput && python manage.py migrate --noinput && python manage.py worker"
+    environment:
+      <<: *appenv
+      DB_NAME: report_db
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+volumes:
+  pgdata:
+  redisdata:
+  rabbitdata:
+  monograph_media:
