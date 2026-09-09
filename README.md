@@ -1,7 +1,5 @@
 # Sistema Distribuído de Monografias (TCC)
 
-Implementação backend baseada no enunciado fornecido. Não inclui frontend.
-
 ## Arquitetura
 
 - `auth-service`: usuários, papéis, login/JWT e auditoria.
@@ -13,6 +11,23 @@ Implementação backend baseada no enunciado fornecido. Não inclui frontend.
 - PostgreSQL: banco separado por serviço.
 - Redis: cache, rate limiting e controle de upload.
 - RabbitMQ: eventos assíncronos.
+
+
+
+## O sistema permite:
+
+- Cadastro de alunos, professores e cursos;
+- Cadastro e submissão de monografias;
+- Upload e validação de arquivos PDF;
+- Aprovação pelo orientador;
+- Agendamento de bancas;
+- Cadastro de membros da banca;
+- Registro de avaliações;
+- Publicação de monografias aprovadas;
+- Pesquisa pública;
+- Notificações;
+- Relatórios e métricas.
+
 
 ## Requisitos do enunciado atendidos
 
@@ -50,6 +65,65 @@ curl http://localhost:8006/api/reports/overview
 ```
 
 Consulte `docs/API.md` para os endpoints.
+
+# 1. Tecnologias utilizadas
+
+- Python 3.13
+- Django
+- Django REST Framework
+- PostgreSQL
+- Redis
+- RabbitMQ
+- Docker
+- Docker Compose
+- JWT
+- PyPDF2
+
+---
+
+# 2. Arquitetura do sistema
+
+```text
+                         USUÁRIO
+                            │
+                            ▼
+                    ┌────────────────┐
+                    │ Frontend / API │
+                    └───────┬────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+              ▼             ▼             ▼
+       ┌────────────┐ ┌────────────┐ ┌────────────┐
+       │    AUTH    │ │ MONOGRAPH  │ │  DEFENSE   │
+       │   :8001    │ │   :8002    │ │   :8003    │
+       └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
+             │              │              │
+             └──────────────┼──────────────┘
+                            │
+                            ▼
+                    ┌───────────────┐
+                    │   RabbitMQ    │
+                    │  Mensageria   │
+                    └───────┬───────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+              ▼             ▼             ▼
+       ┌────────────┐ ┌────────────┐ ┌────────────┐
+       │ REPOSITORY │ │NOTIFICATION│ │   REPORT   │
+       │   :8004    │ │   :8005    │ │   :8006    │
+       └─────┬──────┘ └────────────┘ └────────────┘
+             │
+             ▼
+       ┌──────────────┐
+       │ PostgreSQL   │
+       └──────────────┘
+
+              ┌──────────────┐
+              │    Redis     │
+              │ Cache / apoio│
+              └──────────────┘
 
 ## Versões
 
